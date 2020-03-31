@@ -5,7 +5,7 @@ from flask import request, render_template, redirect
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-
+from sqlalchemy.exc import IntegrityError
 
 project_dir = os.path.dirname(os.path.abspath(__file__))
 database_file = "sqlite:///{}".format(os.path.join(project_dir, "urldatabase.db"))
@@ -17,7 +17,6 @@ db = SQLAlchemy(app)
 
 
 class Url(db.Model):
-
     url = db.Column(db.String(800), unique=True, nullable=False, primary_key=False)
     hash_url = db.Column(db.String(6), unique=True, nullable=False, primary_key=True)
     creation_time = db.Column(db.DateTime, default=datetime.datetime.utcnow)
@@ -58,20 +57,28 @@ def shorten():
         if url.split("//")[0] not in ("http:", "https:", "sftp:", "ftp:"):
             return 'Wrong url', 400
 
-        url_exists = Url.query.filter_by(url=url).first()
+        try:
+            url_exists = Url.query.filter_by(url=url).first()
+        except IntegrityError:
+            return 'Unable to check if url exist', 500
+
         if url_exists is None:
 
             hash_url = generate_hash(url)
 
-            #not good. moving to something like offline Key-DB in the future.
+            # not good. moving to something like offline Key-DB generator in the future.
             while Url.query.filter_by(hash_url=hash_url).first() is not None:
                 print("Re-hashing")
-                hash_url = generate_hash(hash_url + datetime.datetime.utcnow)
+                hash_url = generate_hash(hash_url + str(datetime.datetime.utcnow))
 
             insert = Url(url=url, hash_url=hash_url)
 
-            db.session.add(insert)
-            db.session.commit()
+            try:
+                db.session.add(insert)
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+                return 'Unable add a user', 500
 
             return hash_url
 
@@ -86,5 +93,4 @@ def home():
 
 
 if __name__ == '__main__':
-
     app.run(port="8080", debug=True)
