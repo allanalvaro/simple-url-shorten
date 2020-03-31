@@ -15,6 +15,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = database_file
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
+
 class Url(db.Model):
 
     url = db.Column(db.String(800), unique=True, nullable=False, primary_key=False)
@@ -48,12 +49,12 @@ def geturl():
         if hash_exists is not None:
             return redirect(hash_exists.get_url())
 
+
 @app.route('/shorten', methods=['POST'])
 def shorten():
     if request.form:
         url = request.form.get('url_to_shorten')
 
-        print(url.split("//")[0])
         if url.split("//")[0] not in ("http:", "https:", "sftp:", "ftp:"):
             return 'Wrong url', 400
 
@@ -62,10 +63,9 @@ def shorten():
 
             hash_url = generate_hash(url)
 
-            hash_url = "4e5bee"
-
             #not good. moving to something like offline Key-DB in the future.
             while Url.query.filter_by(hash_url=hash_url).first() is not None:
+                print("Re-hashing")
                 hash_url = generate_hash(hash_url + datetime.datetime.utcnow)
 
             insert = Url(url=url, hash_url=hash_url)
@@ -76,7 +76,9 @@ def shorten():
             return hash_url
 
         else:
+            print("url exists")
             return url_exists.get_hash()
+
 
 @app.route('/')
 def home():
