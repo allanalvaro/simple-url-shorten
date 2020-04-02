@@ -1,6 +1,6 @@
-import hashlib
 import datetime
-from base64 import b64encode
+import random
+import string
 from flask import request, render_template, redirect
 import os
 from flask import Flask
@@ -33,8 +33,9 @@ class Url(db.Model):
 
 
 def generate_hash(url):
-    hash_url = b64encode(url.encode())
-    return hashlib.md5(hash_url).hexdigest()[:6]
+    letters = string.ascii_lowercase
+    print(letters)
+    return ''.join(random.choice(letters) for i in range(6))
 
 
 @app.route('/geturl', methods=['POST'])
