@@ -5,7 +5,7 @@ from flask import render_template
 from flask import request
 from sqlalchemy.exc import IntegrityError
 from urlshorten import db
-from urlshorten.url.models import Url
+from urlshorten.model.url import Url
 
 
 bp = Blueprint("url", __name__)
@@ -59,8 +59,3 @@ def geturl():
         hash_exists = Url.query.filter_by(hash_url=_hash).first()
         if hash_exists is not None:
             return redirect(hash_exists.get_url())
-
-
-@bp.route('/')
-def home():
-    return render_template("index.html")

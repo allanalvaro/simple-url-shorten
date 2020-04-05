@@ -8,7 +8,7 @@ db = SQLAlchemy()
 
 
 def create_app():
-    app = Flask(__name__, instance_relative_config=True)
+    app = Flask(__name__, instance_relative_config=True, template_folder='templates')
 
     project_dir = os.path.dirname(os.path.abspath(__file__))
     database_file = "sqlite:///{}".format(os.path.join(project_dir, "urldatabase.db"))
@@ -22,8 +22,11 @@ def create_app():
 
     db.init_app(app)
 
-    from urlshorten import url
+    from urlshorten.controller.api import url
+    from urlshorten.controller import default
 
     app.register_blueprint(url.bp)
+    app.register_blueprint(default.bp)
 
     return app
+
