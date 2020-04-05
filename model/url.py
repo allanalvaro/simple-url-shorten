@@ -1,5 +1,5 @@
 import datetime
-from urlshorten import db
+from app import db
 
 
 class Url(db.Model):

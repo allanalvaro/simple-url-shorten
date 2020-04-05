@@ -1,14 +1,15 @@
-from urlshorten.helpers.hash import generate_hash
+from helpers.hash import generate_hash
 from flask import Blueprint
 from flask import redirect
-from flask import render_template
 from flask import request
 from sqlalchemy.exc import IntegrityError
-from urlshorten import db
-from urlshorten.model.url import Url
+from app import db
+from model.url import Url
 
 
 bp = Blueprint("url", __name__)
+
+HASH_SIZE = 6
 
 
 @bp.route('/shorten', methods=['POST'])
@@ -26,12 +27,12 @@ def shorten():
 
         if url_exists is None:
 
-            hash_url = generate_hash()
+            hash_url = generate_hash(HASH_SIZE)
 
             # not good. moving to something like offline Key-DB generator in the future.
             while Url.query.filter_by(hash_url=hash_url).first() is not None:
                 print("Re-hashing")
-                hash_url = generate_hash()
+                hash_url = generate_hash(HASH_SIZE)
 
             insert = Url(url=url, hash_url=hash_url)
 
@@ -39,13 +40,11 @@ def shorten():
                 db.session.add(insert)
                 db.session.commit()
             except IntegrityError:
-                db.session.rollback()
                 return 'Unable add a user', 500
 
             return hash_url
 
         else:
-            print("url exists")
             return url_exists.get_hash()
 
 
