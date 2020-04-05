@@ -1,5 +1,7 @@
 import os
+import click
 from flask import Flask
+from flask.cli import with_appcontext
 from flask_sqlalchemy import SQLAlchemy
 
 __version__ = (1, 0, 0, "dev")
@@ -21,6 +23,7 @@ def create_app():
     )
 
     db.init_app(app)
+    app.cli.add_command(init_db_command)
 
     from urlshorten.controller.api import url
     from urlshorten.controller import default
@@ -30,3 +33,14 @@ def create_app():
 
     return app
 
+
+def init_db():
+    db.drop_all()
+    db.create_all()
+
+
+@click.command("init-db")
+@with_appcontext
+def init_db_command():
+    init_db()
+    click.echo("Initialized the database.")
